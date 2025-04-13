@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      containers:
+      - name: flask-container
+        image: flask-app:1.0.3
+        resources:
+          requests:
+            cpu: "25m"
+            memory: "32Mi"
+          limits:
+            cpu: "50m"
+            memory: "64Mi"
+        ports:
+        - containerPort: 8000
+        envFrom:
+            - configMapRef:
+                name: flask-app-config
+            - secretRef:
+                name: flask-app-secret
+        volumeMounts:
+        - mountPath: /data
+          name: flask-storage
+      volumes:
+        - name: flask-storage
+          persistentVolumeClaim:
+            claimName: flask-pvc
+        

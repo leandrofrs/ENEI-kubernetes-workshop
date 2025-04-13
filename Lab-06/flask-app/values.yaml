@@ -1,0 +1,30 @@
+app:
+  flaskContainer:
+    image:
+      repository: flask-app
+      tag: 1.0.3
+    resources:
+      limits:
+        cpu: 50m
+        memory: 64Mi
+      requests:
+        cpu: 25m
+        memory: 32Mi
+  replicas: 1
+appConfig:
+  appName: KubeFlask
+appSecret:
+  apiKey: "secret-key"
+kubernetesClusterDomain: cluster.local
+pv:
+  storageClassName: manual
+  hostPath: "/Users/leandro.f.sousa/Projects/kubernetes-workshop/Lab-03/flask-pv"
+pvc:
+  storageClass: manual
+  storageRequest: 10Mi
+service:
+  ports:
+  - nodePort: 30080
+    port: 80
+    targetPort: 8000
+  type: NodePort

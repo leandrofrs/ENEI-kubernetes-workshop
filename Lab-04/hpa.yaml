@@ -1,0 +1,26 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flask-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flask-app
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        # averageUtilization: The target average CPU utilization percentage (50%).
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60  # Wait 60 seconds before scaling down
+      policies:
+      - type: Percent
+        value: 50                     # Scale down by at most 50% of current replicas
+        periodSeconds: 60             # Within a 60-second window

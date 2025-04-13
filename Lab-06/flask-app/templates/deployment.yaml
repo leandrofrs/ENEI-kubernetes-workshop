@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flask-app.fullname" . }}-app
+  labels:
+  {{- include "flask-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  selector:
+    matchLabels:
+      app: flask
+    {{- include "flask-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: flask
+      {{- include "flask-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        envFrom:
+        - configMapRef:
+            name: {{ include "flask-app.fullname" . }}-app-config
+        - secretRef:
+            name: {{ include "flask-app.fullname" . }}-app-secret
+        image: {{ .Values.app.flaskContainer.image.repository }}:{{ .Values.app.flaskContainer.image.tag
+          | default .Chart.AppVersion }}
+        livenessProbe:
+          failureThreshold: 1
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: flask-container
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources: {{- toYaml .Values.app.flaskContainer.resources | nindent 10 }}
+        volumeMounts:
+        - mountPath: /data
+          name: flask-storage
+      volumes:
+      - name: flask-storage
+        persistentVolumeClaim:
+          claimName: {{ include "flask-app.fullname" . }}-pvc
